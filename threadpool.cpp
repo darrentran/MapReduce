@@ -12,11 +12,6 @@ ThreadPool_t *ThreadPool_create(int num){
 
     workQueue->queue = std::deque<ThreadPool_work_t>();
 
-//    pthread_mutexattr_t Attr;
-//    pthread_mutexattr_init(&Attr);
-//    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
-//    pthread_mutex_init(&(tp->work_mutex), &Attr);
-
     pthread_mutex_init(&(tp->work_mutex), NULL);
     pthread_cond_init(&(tp->work_available_cond), NULL);
     tp->work_queue = *workQueue;
@@ -47,7 +42,7 @@ void ThreadPool_destroy(ThreadPool_t *tp){
 
     // Lock the mutex
     printf("destroying threadpool \n");
-
+    while(tp->live_threads != 0);
     pthread_mutex_lock(&tp->work_mutex);
     tp->stop_running = true;
     // Delete all work objects in queue
@@ -56,7 +51,11 @@ void ThreadPool_destroy(ThreadPool_t *tp){
     // Unlock mutex
     pthread_mutex_unlock(&tp->work_mutex);
 
-    while(tp->live_threads != 0);
+//    for(int i = 0; i < tp->num_threads; i++) {
+//        pthread_join(tp->pool.at(i), NULL);
+//    }
+
+
 
     // Destroy mutex and conditions before destroying threadpool object
     pthread_cond_destroy(&tp->work_available_cond);
@@ -139,7 +138,6 @@ void *Thread_run(ThreadPool_t *tp) {
 
     printf("Killing thread...\n");
     tp->live_threads--;
-    pthread_cond_broadcast(&(tp->work_available_cond));
     pthread_mutex_unlock(&(tp->work_mutex));
     pthread_exit(0);
 }

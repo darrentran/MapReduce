@@ -21,6 +21,7 @@ struct Partition{
 };
 
 std::vector<Partition> partitionVector;
+int partitions;
 int PARTITIONS;
 
 int fileSizeCompare(const void* a, const void* b) {
@@ -81,7 +82,7 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
         pthread_join(threadPool->pool.at(i), NULL);
     }
 
-//    printPartitionContents();
+    printPartitionContents();
 
     ThreadPool_destroy(threadPool);
 
@@ -119,33 +120,33 @@ void MR_Emit(char *key, char *value){
 
 void MR_ProcessPartition(int partition_number){
 
-    Partition currentPartition = partitionVector.at(partition_number);
+    Partition *currentPartition = &partitionVector.at(partition_number);
 
-    if(currentPartition.partition_map.size() == 0) {
+    if(currentPartition->partition_map.size() == 0) {
         return;
     }
 
-    currentPartition.partition_iterator = currentPartition.partition_map.begin();
+    currentPartition->partition_iterator = currentPartition->partition_map.begin();
 
     std::set<char*, cmp>::iterator keyIterator;
-    for(keyIterator = currentPartition.keys_set.begin(); keyIterator != currentPartition.keys_set.end(); keyIterator++) {
+    for(keyIterator = currentPartition->keys_set.begin(); keyIterator != currentPartition->keys_set.end(); keyIterator++) {
       char *key = *keyIterator;
-        currentPartition.reduce(key, partition_number);
+        currentPartition->reduce(key, partition_number);
     }
     pthread_exit(0);
 }
 
 char *MR_GetNext(char *key, int partition_number){
 
-    Partition currentPartition = partitionVector.at(partition_number);
+    Partition *currentPartition = &partitionVector.at(partition_number);
 
-    if(currentPartition.partition_iterator == currentPartition.partition_map.end()) {
+    if(currentPartition->partition_iterator == currentPartition->partition_map.end()) {
         return NULL;
     }
 
     char *value = NULL;
-    if(currentPartition.partition_iterator->first == key) {
-        value = (currentPartition.partition_iterator++)->second;
+    if(strcmp(currentPartition->partition_iterator->first,key) == 0) {
+        value = (currentPartition->partition_iterator++)->second;
         printf("%s",value);
     }
 

@@ -6,21 +6,18 @@
 #include <map>
 #include <set>
 
-struct alphabetical_order {
-    bool operator()(char *const string, char *string1) {
-        return string<string1;
+struct cmp {
+    bool operator() (const char* a, const char* b) const {
+        return strcmp(a,b) < 0;
     }
-
-//    bool operator() (char& lhs, char& rhs)
-//    {return lhs<rhs;}
 };
 
 struct Partition{
-    std::multimap<char*,char*, alphabetical_order> partition_map;
-    std::set<char*> keys_set;
-    std::multimap<char*, char*, alphabetical_order>::iterator partition_iterator;
+    std::multimap<char*,char*, cmp> partition_map;
+    std::set<char*, cmp> keys_set;
+    std::multimap<char*, char*, cmp>::iterator partition_iterator;
     pthread_mutex_t partition_mutex;
-    Reducer func;
+    Reducer reduce;
 };
 
 std::vector<Partition> partitionVector;
@@ -63,8 +60,9 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
     for(int i = 0; i < PARTITIONS; i++) {
         // Create partition object
         Partition p;
-        p.func = concate;
-        p.partition_map = std::multimap<char *, char*, alphabetical_order>();
+        p.reduce = concate;
+        p.partition_map = std::multimap<char *, char*, cmp>();
+        p.keys_set = std::set<char *, cmp>();
         pthread_mutex_init(&p.partition_mutex, NULL);
 
         // Add partition object to vector
@@ -82,18 +80,19 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
     for(int i = 0; i < num_mappers; i++) {
         pthread_join(threadPool->pool.at(i), NULL);
     }
+
 //    printPartitionContents();
 
-    ThreadPool_destroy(threadPool); // Not actually deleting the threads...
+    ThreadPool_destroy(threadPool);
 
-    pthread_t p_threads[num_reducers];
+    pthread_t reducer_thread[num_reducers];
 
-    for(int i = 0; i < PARTITIONS; i++){
-        pthread_create(&p_threads[i], NULL, (void *(*)(void *)) &MR_ProcessPartition, (void *) (intptr_t) i);
+    for(int i = 0; i < num_reducers; i++){
+        pthread_create(&reducer_thread[i], NULL, (void *(*)(void *)) &MR_ProcessPartition, (void *) (intptr_t) i);
     }
 
-    for(int i = 0; i < PARTITIONS; i++) {
-        pthread_join(p_threads[i], NULL);
+    for(int i = 0; i < num_reducers; i++) {
+        pthread_join(reducer_thread[i], NULL);
     }
 
     printf("Main Thread: Waited on %d mappers. Done.\n", num_mappers);
@@ -119,38 +118,36 @@ void MR_Emit(char *key, char *value){
 }
 
 void MR_ProcessPartition(int partition_number){
+
     Partition currentPartition = partitionVector.at(partition_number);
 
     if(currentPartition.partition_map.size() == 0) {
         return;
     }
 
-    std::set<char*>::iterator keyIterator;
     currentPartition.partition_iterator = currentPartition.partition_map.begin();
 
-//    printf("partition: %d, iterator: %s\n", partition_number, currentPartition.partitionIter->first);
-
-    for(keyIterator = currentPartition.keys_set.begin(); keyIterator != currentPartition.keys_set.end(); ++keyIterator) {
-        currentPartition.func(*keyIterator, partition_number);
+    std::set<char*, cmp>::iterator keyIterator;
+    for(keyIterator = currentPartition.keys_set.begin(); keyIterator != currentPartition.keys_set.end(); keyIterator++) {
+      char *key = *keyIterator;
+        currentPartition.reduce(key, partition_number);
     }
-
     pthread_exit(0);
 }
 
 char *MR_GetNext(char *key, int partition_number){
 
     Partition currentPartition = partitionVector.at(partition_number);
-    std::multimap<char*,char*, alphabetical_order>::key_compare cstr = currentPartition.partition_map.key_comp();
 
-//    printf("%s",currentPartition.partition_iterator->first);
-    char *value = NULL;
-
-//    if(currentPartition.partition_iterator->first == key) {
-//        value = (currentPartition.partition_iterator++)->second;
-//    }
-
-    if(cstr(currentPartition.partition_iterator->first, key)) {
-        value = (currentPartition.partition_iterator++)->second;
+    if(currentPartition.partition_iterator == currentPartition.partition_map.end()) {
+        return NULL;
     }
+
+    char *value = NULL;
+    if(currentPartition.partition_iterator->first == key) {
+        value = (currentPartition.partition_iterator++)->second;
+        printf("%s",value);
+    }
+
     return value;
 }

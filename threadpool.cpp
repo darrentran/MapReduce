@@ -1,8 +1,5 @@
 #include "threadpool.h"
 #include <pthread.h>
-#include <sys/stat.h>
-#include <iostream>
-
 
 ThreadPool_t *ThreadPool_create(int num){
 
@@ -28,40 +25,22 @@ ThreadPool_t *ThreadPool_create(int num){
 
 void ThreadPool_destroy(ThreadPool_t *tp){
 
-    /*
-     * TODO: move thread stop running signal to here
-     * - Have threadpool destroy signal tp-> stop_running
-     * - Wake up other threads in the pool by broadcasting the working condition...
-     * - Wait for all threads to finish working
-     * - Delete all threads
-     *
-     *     tp->stop_running = true;
-     *     pthread_cond_broadcast(&tp->work_available_cond);
-     *     while(tp->live_threads != 0);
-     */
-
     // Lock the mutex
-    printf("destroying threadpool \n");
     while(tp->live_threads != 0);
+
     pthread_mutex_lock(&tp->work_mutex);
     tp->stop_running = true;
     // Delete all work objects in queue
     tp->work_queue.queue.clear();
 //    delete(&tp->work_queue);
+
     // Unlock mutex
     pthread_mutex_unlock(&tp->work_mutex);
-
-//    for(int i = 0; i < tp->num_threads; i++) {
-//        pthread_join(tp->pool.at(i), NULL);
-//    }
-
-
 
     // Destroy mutex and conditions before destroying threadpool object
     pthread_cond_destroy(&tp->work_available_cond);
     pthread_mutex_destroy(&tp->work_mutex);
 
-    printf("Threadpool successfully destroyed\n");
     delete(tp);
 }
 
@@ -76,7 +55,6 @@ bool ThreadPool_add_work(ThreadPool_t *tp, thread_func_t func, void *arg) {
     tp->work_queue.queue.push_back(*work);
 
     // let waiting threads know a new item has been added to the queue
-    printf("Added work\n");
     pthread_cond_signal(&(tp->work_available_cond));
 
     // unlock mutex
@@ -109,7 +87,6 @@ void *Thread_run(ThreadPool_t *tp) {
         }
 
         // If there is no work in the queue, wait until there is work available
-        printf("waiting for work... \n");
         while (tp->work_queue.queue.size() == 0 && !tp->stop_running) {
             pthread_cond_wait(&(tp->work_available_cond), &(tp->work_mutex));
         }
@@ -136,7 +113,6 @@ void *Thread_run(ThreadPool_t *tp) {
         pthread_mutex_unlock(&(tp->work_mutex));
     }
 
-    printf("Killing thread...\n");
     tp->live_threads--;
     pthread_mutex_unlock(&(tp->work_mutex));
     pthread_exit(0);

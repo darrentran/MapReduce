@@ -1,5 +1,5 @@
 CC		= g++
-CFLAGS 	= -Wall -Werror -pthread
+CFLAGS 	= -Wall -Werror -pthread -std=c++14
 SOURCES	= $(wildcard *.cpp)
 OBJECTS	= $(SOURCES:%.cpp=%.o)
 

@@ -12,21 +12,18 @@ ThreadPool_t *ThreadPool_create(int num){
 
     workQueue->queue = std::deque<ThreadPool_work_t>();
 
-    pthread_mutexattr_t Attr;
-    pthread_mutexattr_init(&Attr);
-    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&(tp->work_mutex), &Attr);
+//    pthread_mutexattr_t Attr;
+//    pthread_mutexattr_init(&Attr);
+//    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+//    pthread_mutex_init(&(tp->work_mutex), &Attr);
 
+    pthread_mutex_init(&(tp->work_mutex), NULL);
     pthread_cond_init(&(tp->work_available_cond), NULL);
     tp->work_queue = *workQueue;
-
+    tp->pool = std::vector<pthread_t>(num);
 
     for(int i = 0; i < num; i++) {
-        pthread_t thread;
-        pthread_create(&thread, NULL, (void *(*)(void *))Thread_run, tp);
-
-        // Marks thread as detached
-        pthread_detach(thread);
+        pthread_create(&tp->pool.at(i), NULL, (void *(*)(void *))Thread_run, tp);
     }
 
     tp->live_threads = num;
@@ -48,25 +45,21 @@ void ThreadPool_destroy(ThreadPool_t *tp){
      *     while(tp->live_threads != 0);
      */
 
-    tp->stop_running = true;
-    pthread_cond_broadcast(&tp->work_available_cond);
-    while(tp->live_threads != 0);
-
     // Lock the mutex
+    printf("destroying threadpool \n");
+
     pthread_mutex_lock(&tp->work_mutex);
     tp->stop_running = true;
     // Delete all work objects in queue
     tp->work_queue.queue.clear();
 //    delete(&tp->work_queue);
-
-    while(tp->live_threads != 0);
-
     // Unlock mutex
     pthread_mutex_unlock(&tp->work_mutex);
 
+    while(tp->live_threads != 0);
+
     // Destroy mutex and conditions before destroying threadpool object
     pthread_cond_destroy(&tp->work_available_cond);
-    pthread_cond_destroy(&tp->threads_done_working_cond);
     pthread_mutex_destroy(&tp->work_mutex);
 
     printf("Threadpool successfully destroyed\n");
@@ -85,7 +78,7 @@ bool ThreadPool_add_work(ThreadPool_t *tp, thread_func_t func, void *arg) {
 
     // let waiting threads know a new item has been added to the queue
     printf("Added work\n");
-    pthread_cond_broadcast(&(tp->work_available_cond));
+    pthread_cond_signal(&(tp->work_available_cond));
 
     // unlock mutex
     pthread_mutex_unlock(&(tp->work_mutex));
@@ -94,22 +87,16 @@ bool ThreadPool_add_work(ThreadPool_t *tp, thread_func_t func, void *arg) {
 
 ThreadPool_work_t *ThreadPool_get_work(ThreadPool_t *tp) {
 
-    // lock mutex
-    pthread_mutex_lock(&(tp->work_mutex));
-
     // get the item at front of queue and decrease number of items on queue by 1
     ThreadPool_work_t *nextWorkItem = &(tp->work_queue.queue.front());
     tp->work_queue.queue.pop_front();
-
-    // unlock mutex
-    pthread_mutex_unlock(&(tp->work_mutex));
 
     return nextWorkItem->func == NULL && nextWorkItem->arg == NULL ? NULL : nextWorkItem;
 }
 
 void *Thread_run(ThreadPool_t *tp) {
 
-    ThreadPool_work_t *work = nullptr;
+    ThreadPool_work_t *work = NULL;
 
     // thread will continually run this function until stop is signaled
     while(true) {
@@ -129,7 +116,9 @@ void *Thread_run(ThreadPool_t *tp) {
         }
 
         // Get the next work item
-        work = ThreadPool_get_work(tp);
+        if(!tp->stop_running) {
+            work = ThreadPool_get_work(tp);
+        }
 
         if(work == NULL) {
             tp->stop_running = true;
@@ -150,6 +139,7 @@ void *Thread_run(ThreadPool_t *tp) {
 
     printf("Killing thread...\n");
     tp->live_threads--;
+    pthread_cond_broadcast(&(tp->work_available_cond));
     pthread_mutex_unlock(&(tp->work_mutex));
     pthread_exit(0);
 }

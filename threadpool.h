@@ -38,7 +38,6 @@ typedef struct {
     ThreadPool_work_queue_t work_queue;
     pthread_mutex_t  work_mutex;
     pthread_cond_t   work_available_cond;
-    pthread_cond_t   threads_done_working_cond;
     bool stop_running;
     int working_threads;
     int live_threads;
@@ -89,6 +88,4 @@ ThreadPool_work_t *ThreadPool_get_work(ThreadPool_t *tp);
 *     tp - The ThreadPool Object this thread belongs to
 */
 void *Thread_run(ThreadPool_t *tp);
-
-void * Handle_function(void* arg);
 #endif

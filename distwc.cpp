@@ -32,11 +32,10 @@ void Reduce(char *key, int partition_number) {
         count++;
     sprintf(name, "result-%d.txt", partition_number);
     FILE *fp = fopen(name, "a");
-    printf("%s: %d\n", key, count);
     fprintf(fp, "%s: %d\n", key, count);
     fclose(fp);
 }
 
 int main(int argc, char *argv[]) {
-    MR_Run(argc - 1, &(argv[1]), Map, 3, Reduce, 10);
+    MR_Run(argc - 1, &(argv[1]), Map, 1, Reduce, 10);
 };

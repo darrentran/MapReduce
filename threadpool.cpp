@@ -1,5 +1,7 @@
 #include "threadpool.h"
 #include <pthread.h>
+#include <stdio.h>
+#include <string.h>
 
 /*
  * Create threadpool object

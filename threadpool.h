@@ -20,7 +20,7 @@ typedef struct ThreadPool_work_t {
 
 typedef struct {
     // TODO: Add members here
-    std::deque<ThreadPool_work_t> queue;
+    std::queue<ThreadPool_work_t> queue;
 //    ThreadPool_work_t front;
 } ThreadPool_work_queue_t;
 
@@ -40,6 +40,7 @@ typedef struct {
     pthread_cond_t   work_available_cond;
     bool stop_running;
     int working_threads;
+    int num_threads;
     int live_threads;
 
 } ThreadPool_t;

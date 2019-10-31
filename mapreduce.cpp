@@ -2,9 +2,7 @@
 #include "threadpool.h"
 #include <pthread.h>
 #include <sys/stat.h>
-#include <iostream>
 #include <map>
-#include <set>
 
 struct cmp {
     bool operator() (const char* a, const char* b) const {
@@ -57,7 +55,7 @@ int fileSizeCompare(const void* a, const void* b) {
  */
 void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reducer concate, int num_reducers) {
     // Create thread pool
-    ThreadPool_t *threadPool = ThreadPool_create(num_mappers);
+    ThreadPool_t *mapperPool = ThreadPool_create(num_mappers);
     PARTITIONS = num_reducers;
 
     // Create partitions object with its properties and put them into the partition vector
@@ -76,19 +74,21 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
     // Sort file names by size and put them into work queue
     qsort(filenames, num_files, sizeof(char*), fileSizeCompare);
     for(int i = 0; i < num_files; i++) {
-        ThreadPool_add_work(threadPool, (thread_func_t) map, filenames[i]);
+        ThreadPool_add_work(mapperPool, (thread_func_t) map, filenames[i]);
     }
 
     // Add NULL work item to let threads know they have reached the last work item
-    ThreadPool_add_work(threadPool, NULL, NULL);
+    ThreadPool_add_work(mapperPool, NULL, NULL);
 
     //  Wait for mappers to finish
-    for(int i = 0; i < num_mappers; i++) {
-        pthread_join(threadPool->pool.at(i), NULL);
-    }
+//    for(int i = 0; i < num_mappers; i++) {
+//        pthread_join(threadPool->pool.at(i), NULL);
+//    }
+
+    while(mapperPool->work_queue.queue.size() != 0 || mapperPool->working_threads != 0);
 
     // Destroy the mapper threadpool
-    ThreadPool_destroy(threadPool);
+    ThreadPool_destroy(mapperPool);
 
     // Create reducer threads
     pthread_t reducer_thread[num_reducers];
@@ -100,6 +100,7 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
     for(int i = 0; i < num_reducers; i++) {
         pthread_join(reducer_thread[i], NULL);
     }
+
 }
 /*
  * Partition function given from assignment description
@@ -126,10 +127,10 @@ void MR_Emit(char *key, char *value){
 
     // Make copy of key because it is freed from memory in map function
     char* keyCopy = strdup(key);
+    char* valueCopy = strdup(value);
 
     // Put key-values pairs in partition map and keys in set
-    partitionVector.at(partition).partition_map.insert(std::pair<char*, char*>(keyCopy, value));
-//    partitionVector.at(partition).keys_set.insert(keyCopy);
+    partitionVector.at(partition).partition_map.insert(std::pair<char*, char*>(keyCopy, valueCopy));
 
     //  Unlock mutex
     pthread_mutex_unlock(&(partitionVector.at(partition).partition_mutex));

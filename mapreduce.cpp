@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <map>
 #include <iterator>
+#include <algorithm>
 #include <stdlib.h>
 #include <string.h>
 

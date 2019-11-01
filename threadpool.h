@@ -20,7 +20,7 @@ typedef struct ThreadPool_work_t {
 
 typedef struct {
     // TODO: Add members here
-    std::queue<ThreadPool_work_t> queue;
+    std::deque<ThreadPool_work_t> queue;
 //    ThreadPool_work_t front;
 } ThreadPool_work_queue_t;
 

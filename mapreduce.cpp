@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <map>
+#include <iterator>
 #include <stdlib.h>
 #include <string.h>
 
@@ -65,7 +66,7 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
     }
 
     // Sort file names by size and put them into work queue
-    qsort(filenames, num_files, sizeof(char*), fileSizeCompare);
+    std::sort(filenames, filenames+num_files, fileSizeCompare);
     for(int i = 0; i < num_files; i++) {
         ThreadPool_add_work(threadPool, (thread_func_t) map, filenames[i]);
     }

@@ -5,10 +5,8 @@ ThreadPool_t *ThreadPool_create(int num){
 
     // Create work queue object
     ThreadPool_work_queue_t workQueue;
-
-    //  Put queue in work_queue object
     workQueue.queue = std::queue<ThreadPool_work_t>();
-    
+
     //  Create threadpool object
     ThreadPool_t *tp = new ThreadPool_t;
 

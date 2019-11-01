@@ -23,8 +23,10 @@ std::vector<Partition> partitionVector;
 int PARTITIONS;
 
 int fileSizeCompare(const void* a, const void* b) {
-    struct stat sa;
-    struct stat sb;
+
+    struct stat sa{};
+    struct stat sb{};
+
     stat((char*) a, &sa);
     stat((char*) b, &sb);
 
@@ -35,6 +37,7 @@ int fileSizeCompare(const void* a, const void* b) {
     } else {
         return 1;
     }
+
 }
 
 /*

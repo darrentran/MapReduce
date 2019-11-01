@@ -24,7 +24,7 @@ struct Partition{
 std::vector<Partition> partitionVector;
 int PARTITIONS;
 
-int fileSizeCompare(const void * a, const void* b) {
+int fileSizeCompare(const void * a, const void * b) {
 
     struct stat sa;
     struct stat sb;

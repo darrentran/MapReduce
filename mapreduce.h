@@ -5,6 +5,8 @@
 typedef void (*Mapper)(char *file_name);
 typedef void (*Reducer)(char *key, int partition_number);
 
+int fileSizeCompare(const void * a, const void *b);
+
 void MR_Run(int num_files, char *filenames[],
             Mapper map, int num_mappers,
             Reducer concate, int num_reducers);

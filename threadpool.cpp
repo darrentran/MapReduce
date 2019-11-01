@@ -7,16 +7,16 @@ ThreadPool_t *ThreadPool_create(int num){
     ThreadPool_t *tp = new ThreadPool_t;
 
     // Create work queue object
-    ThreadPool_work_queue_t *workQueue =  new ThreadPool_work_queue_t;
+    ThreadPool_work_queue_t workQueue;
 
     //  Put queue in work_queue object
-    workQueue->queue = std::queue<ThreadPool_work_t>();
+    workQueue.queue = std::queue<ThreadPool_work_t>();
 
     //  Initialize mutex and condition variables. Put work queue
     //  and threadpool in threadpool object
     pthread_mutex_init(&(tp->work_mutex), NULL);
     pthread_cond_init(&(tp->work_available_cond), NULL);
-    tp->work_queue = *workQueue;
+    tp->work_queue = workQueue;
     tp->pool = std::vector<pthread_t>(num);
 
     //  Create mapper threads
@@ -37,7 +37,6 @@ void ThreadPool_destroy(ThreadPool_t *tp){
     // Lock the mutex
     pthread_mutex_lock(&tp->work_mutex);
     tp->stop_running = true;
-//    delete(&tp->work_queue);
 
     // Unlock mutex
     pthread_mutex_unlock(&tp->work_mutex);
@@ -52,12 +51,14 @@ void ThreadPool_destroy(ThreadPool_t *tp){
 bool ThreadPool_add_work(ThreadPool_t *tp, thread_func_t func, void *arg) {
 
     // Create the work item
-    ThreadPool_work_t *work = new ThreadPool_work_t(func, arg);
-
+//    ThreadPool_work_t *work = new ThreadPool_work_t(func, arg);
+    ThreadPool_work_t work;
+    work.func = func;
+    work.arg = arg;
     // lock mutex
     pthread_mutex_lock(&(tp->work_mutex));
     // add item to queue
-    tp->work_queue.queue.push(*work);
+    tp->work_queue.queue.push(work);
 
     // let waiting threads know a new item has been added to the queue
     pthread_cond_signal(&(tp->work_available_cond));
@@ -114,8 +115,7 @@ void *Thread_run(ThreadPool_t *tp) {
 
         // Do the work
         work->func(work->arg);
-
-
+//        delete(work);
     }
 
     // Decrease number of live threads, unlock mutex and terminate thread.

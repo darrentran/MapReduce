@@ -9,10 +9,10 @@
 typedef void (*thread_func_t)(void *arg);
 
 typedef struct ThreadPool_work_t {
-    ThreadPool_work_t(thread_func_t f, void *a){
-        func = f;
-        arg = a;
-    };
+//    ThreadPool_work_t(thread_func_t f, void *a){
+//        func = f;
+//        arg = a;
+//    };
     thread_func_t func;              // The function pointer
     void *arg;                       // The arguments for the function
     // TODO: Add other members here if needed

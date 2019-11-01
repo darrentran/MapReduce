@@ -79,14 +79,23 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
     ThreadPool_destroy(threadPool);
 
     // Create reducer threads
-    pthread_t reducer_thread[num_reducers];
-    for(int i = 0; i < num_reducers; i++){
+    pthread_t reducer_thread[PARTITIONS];
+    for(int i = 0; i < PARTITIONS; i++){
         pthread_create(&reducer_thread[i], NULL, (void *(*)(void *)) &MR_ProcessPartition, (void *) (intptr_t) i);
     }
 
     //  Wait for reducers to finish
-    for(int i = 0; i < num_reducers; i++) {
+    for(int i = 0; i < PARTITIONS; i++) {
         pthread_join(reducer_thread[i], NULL);
+    }
+
+    // Free duplicated keys in multimap.
+    for(int i = 0; i < PARTITIONS; i++) {
+        Partition currentPartition = partitionVector.at(i);
+        std::multimap<char*,char*,cmp>::iterator iter;
+        for(iter = currentPartition.partition_map.begin(); iter != currentPartition.partition_map.end(); iter++) {
+            free(iter->first);
+        }
     }
 }
 
@@ -169,7 +178,7 @@ char *MR_GetNext(char *key, int partition_number){
 
     //  If we haven't reached the end of our list of key, pass return the value
     if(strcmp(currentPartition->partition_iterator->first,key) == 0) {
-        value = strdup((currentPartition->partition_iterator++)->second);
+        value = (currentPartition->partition_iterator++)->second;
     }
 
     return value;

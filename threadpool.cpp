@@ -1,39 +1,42 @@
 #include "threadpool.h"
 #include <pthread.h>
-#include <string.h>
-#include <stdlib.h>
 
 ThreadPool_t *ThreadPool_create(int num){
 
+    //  Create threadpool object
     ThreadPool_t *tp = new ThreadPool_t;
 
+    // Create work queue object
     ThreadPool_work_queue_t *workQueue =  new ThreadPool_work_queue_t;
 
-    workQueue->queue = std::deque<ThreadPool_work_t>();
+    //  Put queue in work_queue object
+    workQueue->queue = std::queue<ThreadPool_work_t>();
 
+    //  Initialize mutex and condition variables. Put work queue
+    //  and threadpool in threadpool object
     pthread_mutex_init(&(tp->work_mutex), NULL);
     pthread_cond_init(&(tp->work_available_cond), NULL);
     tp->work_queue = *workQueue;
     tp->pool = std::vector<pthread_t>(num);
 
+    //  Create mapper threads
     for(int i = 0; i < num; i++) {
         pthread_create(&tp->pool.at(i), NULL, (void *(*)(void *))Thread_run, tp);
     }
 
     tp->live_threads = num;
-    tp->working_threads = 0;
+
     return tp;
 }
 
 void ThreadPool_destroy(ThreadPool_t *tp){
 
-    // Lock the mutex
+    //  Wait for all live threads to finish
     while(tp->live_threads != 0);
 
+    // Lock the mutex
     pthread_mutex_lock(&tp->work_mutex);
     tp->stop_running = true;
-    // Delete all work objects in queue
-    tp->work_queue.queue.clear();
 //    delete(&tp->work_queue);
 
     // Unlock mutex
@@ -54,7 +57,7 @@ bool ThreadPool_add_work(ThreadPool_t *tp, thread_func_t func, void *arg) {
     // lock mutex
     pthread_mutex_lock(&(tp->work_mutex));
     // add item to queue
-    tp->work_queue.queue.push_back(*work);
+    tp->work_queue.queue.push(*work);
 
     // let waiting threads know a new item has been added to the queue
     pthread_cond_signal(&(tp->work_available_cond));
@@ -68,7 +71,7 @@ ThreadPool_work_t *ThreadPool_get_work(ThreadPool_t *tp) {
 
     // get the item at front of queue and decrease number of items on queue by 1
     ThreadPool_work_t *nextWorkItem = &(tp->work_queue.queue.front());
-    tp->work_queue.queue.pop_front();
+    tp->work_queue.queue.pop();
 
     return nextWorkItem->func == NULL && nextWorkItem->arg == NULL ? NULL : nextWorkItem;
 }
@@ -98,23 +101,24 @@ void *Thread_run(ThreadPool_t *tp) {
             work = ThreadPool_get_work(tp);
         }
 
+        //  If the work item is NULL, set termination flag to true
+        //  and wake up all sleeping threads.
         if(work == NULL) {
             tp->stop_running = true;
             pthread_cond_broadcast(&(tp->work_available_cond));
             break;
         }
 
-        tp->working_threads++;
+        //  Unlock mutex
         pthread_mutex_unlock(&(tp->work_mutex));
 
         // Do the work
         work->func(work->arg);
 
-        pthread_mutex_lock(&(tp->work_mutex));
-        tp->working_threads--;
-        pthread_mutex_unlock(&(tp->work_mutex));
+
     }
 
+    // Decrease number of live threads, unlock mutex and terminate thread.
     tp->live_threads--;
     pthread_mutex_unlock(&(tp->work_mutex));
     pthread_exit(0);

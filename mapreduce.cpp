@@ -37,18 +37,6 @@ int fileSizeCompare(const void* a, const void* b) {
     }
 }
 
-//void printPartitionContents(){
-//    for (int i = 0; i < partitionVector.size(); i++)
-//    {
-//        printf("partition: %d\n", i);
-//        std::multimap<char*, char*>::iterator iter;
-//        for (iter = partitionVector.at(i).partition_map.begin(); iter != partitionVector.at(i).partition_map.end() ; ++iter)
-//        {
-//            printf("key: %s, value: %s\n", iter->first, iter->second);
-//        }
-//    }
-//}
-
 /*
  * Main run function for map reduce library. Creates specified number of mappers and lets them map the input
  * files into partitions. Once the mappers are finished, the function creates the reducers which take a single
@@ -101,6 +89,7 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
         pthread_join(reducer_thread[i], NULL);
     }
 }
+
 /*
  * Partition function given from assignment description
  */
@@ -129,7 +118,6 @@ void MR_Emit(char *key, char *value){
 
     // Put key-values pairs in partition map and keys in set
     partitionVector.at(partition).partition_map.insert(std::pair<char*, char*>(keyCopy, value));
-//    partitionVector.at(partition).keys_set.insert(keyCopy);
 
     //  Unlock mutex
     pthread_mutex_unlock(&(partitionVector.at(partition).partition_mutex));

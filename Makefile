@@ -11,9 +11,6 @@ all: wc
 clean:
 	rm -f *.o wordcount
 
-cr:
-	rm -f result-*.txt
-
 compress:
 	zip wordcount.zip README.md Makefile *.cpp *.h
 

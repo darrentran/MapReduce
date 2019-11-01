@@ -9,20 +9,21 @@ ThreadPool_t *ThreadPool_create(int num){
 
     //  Create threadpool object
     ThreadPool_t *tp = new ThreadPool_t;
-
+    tp->work_queue = workQueue;
+    tp->pool = std::vector<pthread_t>(num);
+    tp->live_threads = num;
+   
     //  Initialize mutex and condition variables. Put work queue
     //  and threadpool in threadpool object
     pthread_mutex_init(&(tp->work_mutex), NULL);
     pthread_cond_init(&(tp->work_available_cond), NULL);
-    tp->work_queue = workQueue;
-    tp->pool = std::vector<pthread_t>(num);
 
     //  Create mapper threads
     for(int i = 0; i < num; i++) {
         pthread_create(&tp->pool.at(i), NULL, (void *(*)(void *))Thread_run, tp);
     }
 
-    tp->live_threads = num;
+
 
     return tp;
 }

@@ -12,11 +12,13 @@ ThreadPool_t *ThreadPool_create(int num){
     tp->work_queue = workQueue;
     tp->pool = std::vector<pthread_t>(num);
     tp->live_threads = num;
-   
+    tp->work_mutex = PTHREAD_MUTEX_INITIALIZER;
+    tp->work_available_cond = PTHREAD_COND_INITIALIZER;
+
     //  Initialize mutex and condition variables. Put work queue
     //  and threadpool in threadpool object
-    pthread_mutex_init(&(tp->work_mutex), NULL);
-    pthread_cond_init(&(tp->work_available_cond), NULL);
+//    pthread_mutex_init(&(tp->work_mutex), NULL);
+//    pthread_cond_init(&(tp->work_available_cond), NULL);
 
     //  Create mapper threads
     for(int i = 0; i < num; i++) {

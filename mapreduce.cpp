@@ -22,10 +22,10 @@ struct Partition{
 std::vector<Partition> partitionVector;
 int PARTITIONS;
 
-int fileSizeCompare(const void* a, const void* b) {
+int fileSizeCompare(char* a, char* b) {
 
-    struct stat sa{};
-    struct stat sb{};
+    struct stat sa;
+    struct stat sb;
 
     stat((char*) a, &sa);
     stat((char*) b, &sb);

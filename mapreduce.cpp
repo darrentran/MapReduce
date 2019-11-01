@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <map>
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 
 struct cmp {
     bool operator() (const char* a, const char* b) const {

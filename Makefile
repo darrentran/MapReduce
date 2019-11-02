@@ -12,7 +12,7 @@ clean:
 	rm -f *.o wordcount
 
 compress:
-	zip wordcount.zip README.md Makefile *.cpp *.h
+	zip mapreduce.zip README.md Makefile *.cpp *.h
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $^ -o $@ -g

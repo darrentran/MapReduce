@@ -22,8 +22,6 @@ ThreadPool_t *ThreadPool_create(int num){
         pthread_create(&tp->pool.at(i), NULL, (void *(*)(void *))Thread_run, tp);
     }
 
-
-
     return tp;
 }
 
@@ -49,10 +47,10 @@ void ThreadPool_destroy(ThreadPool_t *tp){
 bool ThreadPool_add_work(ThreadPool_t *tp, thread_func_t func, void *arg) {
 
     // Create the work item
-//    ThreadPool_work_t *work = new ThreadPool_work_t(func, arg);
     ThreadPool_work_t work;
     work.func = func;
     work.arg = arg;
+
     // lock mutex
     pthread_mutex_lock(&(tp->work_mutex));
     // add item to queue
@@ -113,7 +111,6 @@ void *Thread_run(ThreadPool_t *tp) {
 
         // Do the work
         work->func(work->arg);
-//        delete(work);
     }
 
     // Decrease number of live threads, unlock mutex and terminate thread.
@@ -121,4 +118,3 @@ void *Thread_run(ThreadPool_t *tp) {
     pthread_mutex_unlock(&(tp->work_mutex));
     pthread_exit(0);
 }
-

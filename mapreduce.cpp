@@ -28,7 +28,7 @@ std::vector<Partition> partitionVector;
 int PARTITIONS;
 
 /*
- * Comparator struct used to sort files by size
+ * Comparator function for file sizes
  */
 struct {
     bool operator()(char * a, char * b) const

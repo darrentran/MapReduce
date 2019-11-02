@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Comparator function for keys in multimap
+ */
 struct cmp {
     bool operator() (const char* a, const char* b) const {
         return strcmp(a,b) < 0;
@@ -24,24 +27,9 @@ struct Partition{
 std::vector<Partition> partitionVector;
 int PARTITIONS;
 
-//struct fileSizeCompare(const void * a, const void * b) {
-//
-//    struct stat sa;
-//    struct stat sb;
-//
-//    stat((char*) a, &sa);
-//    stat((char*) b, &sb);
-//
-//    if ( sa.st_size < sb.st_size ) {
-//        return -1;
-//    } else if(sa.st_size ==  sb.st_size) {
-//        return 0;
-//    } else {
-//        return 1;
-//    }
-//
-//}
-
+/*
+ * Comparator struct used to sort files by size
+ */
 struct {
     bool operator()(char * a, char * b) const
     {

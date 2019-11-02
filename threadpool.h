@@ -9,29 +9,22 @@
 typedef void (*thread_func_t)(void *arg);
 
 typedef struct ThreadPool_work_t {
-//    ThreadPool_work_t(thread_func_t f, void *a){
-//        func = f;
-//        arg = a;
-//    };
     thread_func_t func;              // The function pointer
     void *arg;                       // The arguments for the function
-    // TODO: Add other members here if needed
 } ThreadPool_work_t;
 
 typedef struct {
-    // TODO: Add members here
     std::queue<ThreadPool_work_t> queue;
-//    ThreadPool_work_t front;
 } ThreadPool_work_queue_t;
 
 typedef struct {
     /**
-     * pool: pool of threads
-     * work_queue: queue of work items
-     * work_mutex: global mutex for threads in pool
-     * available_work_cond: condition for threads to be notified if there are still work items in the queue
-     * threads_working_cond: condition to check if there are still threads performing work
-     * stop_running: boolean to check if thread should stop running
+     * pool - Pool of threads
+     * work_queue - Queue of work items
+     * work_mutex - Global mutex for threads in pool
+     * available_work_cond - Condition for threads to be notified if there are still work items in the queue
+     * stop_running - Boolean to check if thread should stop running
+     * live_threads - Number of live threads
      **/
 
     std::vector<pthread_t> pool;

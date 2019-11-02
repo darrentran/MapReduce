@@ -1,5 +1,6 @@
 # CMPUT379-Assignment2 dtran1 - 1495312
 
+
 #How the intermediate key/value pairs are stored:
 The intermediate key/value pairs are stored in a vector of Partition items. Partition items are a struct composed 
 of a mutex lock, a multimap, a multimap iterator and a reduce function. The mutex lock within each partition is a 
@@ -11,6 +12,7 @@ with the key being reduced.
 # Time complexity of MR_Emit and MR_GetNext functions:
 *MR_Emit*: The time complexity is `O(logN)`. We get the partition and we insert it into the multimap. 
 Multimap time complexity is `O(logN)`
+
 *MR_GetNext*: The time complexity `O(1)`. We compare the key with the current current value pointed to by the iterator.
 These comparisons take constant time, so overall the time complexity is `O(1)`.
  

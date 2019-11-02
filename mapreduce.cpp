@@ -8,12 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+//  Comparator for keys in multimap
 struct cmp {
     bool operator() (const char* a, const char* b) const {
         return strcmp(a,b) < 0;
     }
 };
 
+//  Partition data structure
 struct Partition{
     std::multimap<char*,char*, cmp> partition_map;
     std::multimap<char*, char*, cmp>::iterator partition_iterator;
@@ -24,24 +26,7 @@ struct Partition{
 std::vector<Partition> partitionVector;
 int PARTITIONS;
 
-//struct fileSizeCompare(const void * a, const void * b) {
-//
-//    struct stat sa;
-//    struct stat sb;
-//
-//    stat((char*) a, &sa);
-//    stat((char*) b, &sb);
-//
-//    if ( sa.st_size < sb.st_size ) {
-//        return -1;
-//    } else if(sa.st_size ==  sb.st_size) {
-//        return 0;
-//    } else {
-//        return 1;
-//    }
-//
-//}
-
+//  Comparator for checking file sizes for sort algorithm
 struct {
     bool operator()(char * a, char * b) const
     {
@@ -93,7 +78,7 @@ void MR_Run(int num_files, char *filenames[], Mapper map, int num_mappers, Reduc
         pthread_join(threadPool->pool.at(i), NULL);
     }
 
-    // Destroy the mapper threadpool
+    // Destroy the mapper thread pool
     ThreadPool_destroy(threadPool);
 
     // Create reducer threads

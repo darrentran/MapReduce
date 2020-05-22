@@ -1,5 +1,4 @@
-# CMPUT379-Assignment2 dtran1 - 1495312
-
+# CMPUT379-Assignment2 (Map Reduce)
 
 #How the intermediate key/value pairs are stored:
 The intermediate key/value pairs are stored in a vector of Partition items. Partition items are a struct composed 
